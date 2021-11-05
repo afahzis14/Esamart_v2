@@ -1,14 +1,18 @@
 package com.example.myapplication;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.myapplication.server.DataParsing;
@@ -26,8 +30,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
     private DataParsing call = new DataParsing();
+    private ProgressDialog progressDialog;
+
+    int setOnVisibility = 1, setOnCameraMpasView=0;
 
     LinearLayout ll_menu, ll_camera, ll_galery, ll_history, ll_logout;
+    TextView tx_camera, tx_galery, tx_history, tx_logout, tx_menu;
 
     String[] PERMISSIONS = {
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -49,6 +57,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ll_history = findViewById(R.id.ll_history);
         ll_logout = findViewById(R.id.ll_logout);
 
+        tx_menu = findViewById(R.id.tx_menu);
+        tx_camera = findViewById(R.id.tx_camera);
+        tx_galery = findViewById(R.id.tx_galery);
+        tx_history = findViewById(R.id.tx_history);
+        tx_logout = findViewById(R.id.tx_logout);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -56,6 +70,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         onClick();
         setPermision();
+        setVisibility();
+
+        progressDialog = ProgressDialog.show(MapsActivity.this, "Mohon tunggu....",
+                "Sedang memeriksa data.", true);
+        progressDialog.setCancelable(false);
+
+        ll_menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setVisibility();
+            }
+        });
+    }
+
+    private void setVisibility(){
+        if (setOnVisibility!=0){
+            tx_menu.setVisibility(View.GONE);
+            tx_camera.setVisibility(View.GONE);
+            tx_galery.setVisibility(View.GONE);
+            tx_history.setVisibility(View.GONE);
+            tx_logout.setVisibility(View.GONE);
+            setOnVisibility=0;
+        }else{
+            tx_menu.setVisibility(View.VISIBLE);
+            tx_camera.setVisibility(View.VISIBLE);
+            tx_galery.setVisibility(View.VISIBLE);
+            tx_history.setVisibility(View.VISIBLE);
+            tx_logout.setVisibility(View.VISIBLE);
+            setOnVisibility=1;
+        }
     }
 
 
@@ -117,9 +161,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
+        //LatLng myLocation = new LatLng(googleMap.getMyLocation().getLatitude(), googleMap.getMyLocation().getLongitude());
         //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        //mMap.setMyLocationEnabled(true);
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation));
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+        mMap.isMyLocationEnabled();
+        mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(@NonNull Location location) {
+                if (setOnCameraMpasView==0){
+                    double currentLatitude = location.getLatitude();
+                    double currentLongitude = location.getLongitude();
+                    LatLng myLocation = new LatLng(currentLatitude,currentLongitude);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 13));
+                    progressDialog.dismiss();
+                    setOnCameraMpasView=1;
+                }
+            }
+        });
+
+        //LatLng myLocation = new LatLng(, mMap.getMyLocation().getLongitude());
+        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation));
     }
 }
