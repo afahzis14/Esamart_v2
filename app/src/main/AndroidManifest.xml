@@ -28,7 +28,7 @@
             android:exported="true" />
         <activity
             android:screenOrientation="portrait"
-            android:name=".LoadingScreen"
+            android:name=".MapsActivity"
             android:exported="true" />
         <activity
             android:screenOrientation="portrait"
@@ -47,7 +47,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapsActivity"
+            android:name=".LoadingScreen"
             android:exported="true"
             android:label="@string/title_activity_maps"
             android:screenOrientation="portrait"
